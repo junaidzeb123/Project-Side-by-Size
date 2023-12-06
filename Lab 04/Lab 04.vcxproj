@@ -101,6 +101,7 @@
     <ClInclude Include="Machine.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="sha1.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp" />

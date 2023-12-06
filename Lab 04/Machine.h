@@ -1,13 +1,15 @@
 #pragma once
 #include<cmath>
 #include"BigInt.h"
-
+using  std::string;
+using  std::cout;
+using  std::endl;
 class Machine_Node;
 class Files {
 public:
 	int id;
-	std::string name;
-	std::string content;
+	 string name;
+	 string content;
 	Files()
 	{
 		id = 0;
@@ -36,8 +38,9 @@ public:
 	{
 		index = i;
 		nextMachineID = ni;
+		next = nullptr;	
 		nextMachineAddress = ptr;
-		next = nullptr;
+
 		previous = nullptr;
 	}
 };
@@ -49,7 +52,7 @@ public:
 	RoutingTable()
 	{
 		Head = nullptr;
-		count = 1;
+		count = 0;
 	}
 
 	void AddNode(Machine_Node* ptr)
@@ -97,19 +100,16 @@ public:
 class Machine_list {
 public:
 	Machine_Node* Head;
-	Bigint_160 count("0");
-	int Total_no_of_bits;//    i.e 160
+	Bigint_160 count;// ("0");
 	int no_of_bits_used;//		i.e 2^4
 
 	Machine_list() {
 		Head = nullptr;
-		Total_no_of_bits = 0;
 		no_of_bits_used = 0;
 	}
 	Machine_list(int total, int used)
 	{
 		Head = nullptr;
-		Total_no_of_bits = total;
 		no_of_bits_used = used;
 	}
 	
@@ -141,7 +141,7 @@ public:
 				current->next = newNode;
 			}
 		}
-		count++;
+		//count++;
 	}
 	
 

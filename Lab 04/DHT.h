@@ -1,20 +1,16 @@
 #pragma once
 #include"Machine.h"
 #include "BigInt.h"
-
+#include "sha1.hpp"
+#include <string>
+#include <iostream>
+using  std::string;
+using  std::cout;
+using  std::cin;
+using  std::endl;
 #ifndef DHT_H
 #define DHT_H
-std::string hashFunction(std::string const& s) {
-    const int p = 31;
-    const int m = 1e9 + 9;
-    long long hash_value = 0;
-    long long p_pow = 1;
-    for (char c : s) {
-        hash_value = (hash_value + (c - 'a' + 1) * p_pow) % m;
-        p_pow = (p_pow * p) % m;
-    }
-    return (std::to_string(hash_value));
-}
+
 
 class DHT {
 	Machine_list machines;
@@ -22,46 +18,46 @@ class DHT {
     int noofMachines = 0;
 public:
 	DHT() {
-        std::string name = "";
+         string name = "";
         int choice = 0;
 
-        std::cout << "\t\t\tWELLCOME TO INTERPLANETARY FILE SYSTEM\n";
-        std::cout << "Please enter the size of identifier space you want to add\n";
-        std::cin >> sizeofSpace;
+         cout << "\t\t\tWELLCOME TO INTERPLANETARY FILE SYSTEM\n";
+         cout << "Please enter the size of identifier space you want to add\n";
+         cin >> sizeofSpace;
         while (sizeofSpace <= 0) {
-            std::cout << "please enter a positive size of bit Space\n";
-            std::cin >> sizeofSpace;
+             cout << "please enter a positive size of bit Space\n";
+             cin >> sizeofSpace;
         }
 
-        std::cout << "enter the no of machines you want to add\n";
-        std::cin >> noofMachines;
+         cout << "enter the no of machines you want to add\n";
+         cin >> noofMachines;
         while (noofMachines <= 0) {
-            std::cout << "please enter a positive szieofSpace\n";
-            std::cin >> noofMachines;
+             cout << "please enter a positive szieofSpace\n";
+             cin >> noofMachines;
         }
 
-        std::cout << "Do you want to give ids  or names  to each machine\n";
-        std::cout << "1.Ids\n";
-        std::cout << "2.Names\n";
-        std::cin >> choice;
+         cout << "Do you want to give ids  or names  to each machine\n";
+         cout << "1.Ids\n";
+         cout << "2.Names\n";
+         cin >> choice;
         while (choice != 1 && choice != 2) {
-            std::cout << "Enter a valid choice\n";
-            std::cin >> choice;
+             cout << "Enter a valid choice\n";
+             cin >> choice;
         }
 
         if (choice == 1) {
             Bigint_160*idsArry = new Bigint_160[noofMachines];
             for (int i = 0; i < noofMachines; i++) {
                 bool repeated = false;
-                std::cout << "Please enter the id of machine " << i +1<< " \n";
+                 cout << "Please enter the id of machine " << i +1<< " \n";
                 Bigint_160 ids;
-                std::cin >> ids;
+                 cin >> ids;
 
                 for (int j = 0; j < i; j++) {
                     if (idsArry[j] == ids) {
-                        std::cout << "This machine name is already assigned to an another machines\n";
-                        std::cout << "Pleae assign unique name to each machine\n";
-                        std::cout << "Pleae enter the name againt";
+                         cout << "This machine name is already assigned to an another machines\n";
+                         cout << "Pleae assign unique name to each machine\n";
+                         cout << "Pleae enter the name againt";
                         repeated = true;
                         break;
                     }
@@ -78,18 +74,18 @@ public:
             delete[] idsArry;
         }
         else {
-            std::string* names = new std::string[noofMachines];
+             string* names = new  string[noofMachines];
             for (int i = 0; i < noofMachines; i++) {
                 bool repeated = false;
-                std::cout << "Please enter the name of machine " << i+1 << " \n";
-                std::string name;
-                std::cin >> name;
+                 cout << "Please enter the name of machine " << i+1 << " \n";
+                 string name;
+                 cin >> name;
 
                 for (int j = 0; j < i; j++) {
                     if (names[j] == name) {
-                        std::cout << "This machine name is already assigned to an another machines\n";
-                        std::cout << "Pleae assign unique name to each machine\n";
-                        std::cout << "Pleae enter the name againt";
+                         cout << "This machine name is already assigned to an another machines\n";
+                         cout << "Pleae assign unique name to each machine\n";
+                         cout << "Pleae enter the name againt";
                         repeated = true;
                         break;
                     }
@@ -99,16 +95,17 @@ public:
                     i--;
                     continue;
                 }
+
                 names[i] = name;
-                std::string hashedId = hashFunction(name);
+                SHA1 checksum;
+                checksum.update(name);
+                string hashedId = checksum.final();
                 Bigint_160 ids(hashedId);
                 ids = ids % sizeofSpace;
                 machines.AddMachine(ids);
             }
             delete[]names;
         }
-
-
 	}
 };
 #endif 
