@@ -8,8 +8,8 @@ class Machine_Node;
 class Files {
 public:
 	int id;
-	 string name;
-	 string content;
+	string name;
+	string content;
 	Files()
 	{
 		id = 0;
@@ -21,7 +21,7 @@ public:
 class RoutingTable_Node {
 public:
 	int index;
-	int nextMachineID;
+	Bigint_160 nextMachineID;
 	Machine_Node* nextMachineAddress;
 	RoutingTable_Node* next;
 	RoutingTable_Node* previous;
@@ -29,18 +29,15 @@ public:
 	RoutingTable_Node()
 	{
 		index = 0;
-		nextMachineID = 0;
 		nextMachineAddress = nullptr;
 		next = nullptr;
 		previous = nullptr;
 	}
-	RoutingTable_Node(int i, int ni, Machine_Node* ptr)
+	RoutingTable_Node(int i )
 	{
 		index = i;
-		nextMachineID = ni;
 		next = nullptr;	
-		nextMachineAddress = ptr;
-
+		nextMachineAddress = nullptr;
 		previous = nullptr;
 	}
 };
@@ -48,63 +45,82 @@ public:
 class RoutingTable {
 public:
 	RoutingTable_Node* Head;
+	RoutingTable_Node* tail;
 	int count;
 	RoutingTable()
 	{
 		Head = nullptr;
-		count = 0;
+		tail = nullptr;
+		count = 1;
 	}
-
-	void AddNode(Machine_Node* ptr)
+	void AddNode()
 	{
-		RoutingTable_Node* newNode = new RoutingTable_Node;
+		RoutingTable_Node* newNode = new RoutingTable_Node(count);
 		newNode->index = count;
 		//newNode->nextMachineID = ptr->ID;
-		newNode->nextMachineAddress = ptr;
+	//	newNode->nextMachineAddress = ptr;
 
-		if (Head == nullptr)
+		if (Head == nullptr) {
 			Head = newNode;
+			tail = newNode;
+		}
 		else
 		{
 			RoutingTable_Node* temp = Head;
-			while (temp->next)
+			while (temp->next) {
 				temp = temp->next;
+			}
+			newNode->next = temp->next;
 			temp->next = newNode;
 			newNode->previous = temp;
+			tail = newNode;
 		}
 		count++;
 	}
-
+	void Diaplay()
+	{
+		RoutingTable_Node* temp = Head;
+		while (temp != nullptr)
+		{
+			cout<<"index " << temp->index << "\t";
+			cout<<"nextmachineid\t" << temp->nextMachineAddress << "\n";
+			temp = temp->next;
+		}
+		cout << endl;
+	}
 };
-
 class Machine_Node {
 public:
 	Bigint_160 ID;
 	Machine_Node* next;
-	RoutingTable* FT;
+	RoutingTable FT;
 	Files* root;
 
 	Machine_Node() {
 		next = nullptr;
-		FT = new RoutingTable;
 		root = nullptr;
 	}
-	Machine_Node(Bigint_160 id) {
+	Machine_Node(Bigint_160 id,int sizeofTables) {
 		ID = id;
 		next = nullptr;
-		FT = new RoutingTable;
 		root = nullptr;
+		for (int i = 0; i < sizeofTables; i++) {
+			FT.AddNode();
+		}
 	}
 };
 
+
 class Machine_list {
-public:
 	Machine_Node* Head;
-	Bigint_160 count;// ("0");
-	int no_of_bits_used;//		i.e 2^4
+	int count;// ("0");
+	int no_of_bits_used;//		
+	int sizeofTables;
+public:
 
 	Machine_list() {
 		Head = nullptr;
+		sizeofTables = 0;
 		no_of_bits_used = 0;
 	}
 	Machine_list(int total, int used)
@@ -112,9 +128,36 @@ public:
 		Head = nullptr;
 		no_of_bits_used = used;
 	}
-	
+	void mangesuccessors() {
+		Machine_Node* temp = Head;
+		while (temp->next != Head && temp != nullptr)
+		{
+			int i = 1;
+			RoutingTable_Node* tableTemp = temp->FT.Head;
+			while (tableTemp != nullptr)
+			{
+				unsigned long long int  decimalValue;
+				std::stringstream ss(temp->ID.to_string());
+
+				// Convert decimal string to integer
+				ss >> decimalValue;
+				unsigned long long int calculatedId = decimalValue + pow(2, i-1);
+				Machine_Node* temp2 = temp->next;
+				while (  temp2->ID.to_string() < std::to_string(calculatedId) && temp2->next != temp)
+				{
+					temp2 = temp2->next;
+				}
+				tableTemp->nextMachineAddress = temp2;
+				tableTemp->nextMachineID = temp2->ID;
+				tableTemp = tableTemp->next;
+				i++;
+				
+			}
+			temp = temp->next;
+		}
+	}
 	void AddMachine(Bigint_160 ID) {
-		Machine_Node* newNode = new Machine_Node(ID);
+		Machine_Node* newNode = new Machine_Node(ID,sizeofTables);
 
 		if (!Head) {
 			Head = newNode;
@@ -141,21 +184,25 @@ public:
 				current->next = newNode;
 			}
 		}
-		//count++;
+		count++;
+		mangesuccessors();
 	}
-	
 
 	void Diaplay()
 	{
 		Machine_Node* temp = Head;
-		//cout << temp->ID << "->";
+		cout << temp->ID.to_string() << "\n";
+		temp->FT.Diaplay();
 		temp = temp->next;
 		while (temp != Head)
 		{
-			//cout << temp->ID << temp->FT->count << "->";
+			cout << temp->ID.to_string() <<"\n";
+			temp->FT.Diaplay();
 			temp = temp->next;
 		}
 	}
-
+	void setSizeofTables(int n) {
+		sizeofTables = n;
+	}
 };
 

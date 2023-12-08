@@ -11,7 +11,6 @@ using  std::endl;
 #ifndef DHT_H
 #define DHT_H
 
-
 class DHT {
 	Machine_list machines;
     int sizeofSpace = 0;
@@ -21,25 +20,26 @@ public:
          string name = "";
         int choice = 0;
 
-         cout << "\t\t\tWELLCOME TO INTERPLANETARY FILE SYSTEM\n";
-         cout << "Please enter the size of identifier space you want to add\n";
-         cin >> sizeofSpace;
+        cout << "\t\t\tWELLCOME TO INTERPLANETARY FILE SYSTEM\n";
+        cout << "Please enter the size of identifier space you want to add\n";
+        cin >> sizeofSpace;
         while (sizeofSpace <= 0) {
              cout << "please enter a positive size of bit Space\n";
              cin >> sizeofSpace;
         }
+        machines.setSizeofTables(sizeofSpace);
 
-         cout << "enter the no of machines you want to add\n";
-         cin >> noofMachines;
+        cout << "enter the no of machines you want to add\n";
+        cin >> noofMachines;
         while (noofMachines <= 0) {
              cout << "please enter a positive szieofSpace\n";
              cin >> noofMachines;
         }
 
-         cout << "Do you want to give ids  or names  to each machine\n";
-         cout << "1.Ids\n";
-         cout << "2.Names\n";
-         cin >> choice;
+        cout << "Do you want to give ids  or names  to each machine\n";
+        cout << "1.Ids\n";
+        cout << "2.Names\n";
+        cin >> choice;
         while (choice != 1 && choice != 2) {
              cout << "Enter a valid choice\n";
              cin >> choice;
@@ -107,5 +107,11 @@ public:
             delete[]names;
         }
 	}
+    void machinesAndTablePrint() {
+        machines.Diaplay();
+    }
+    void displayRoutingTables() {
+
+    }
 };
 #endif 

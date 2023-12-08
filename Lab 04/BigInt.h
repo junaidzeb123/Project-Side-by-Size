@@ -1,6 +1,8 @@
 #pragma once
 #include <sstream>
 #include<cmath>
+#include<bitset>
+
 using  std::string;
 using  std::cout;
 using  std::endl;
@@ -136,7 +138,7 @@ public:
 
     bool operator < (Bigint_160& num1) {
         for (int i = 0; i < 5; i++) {
-            if (this->number[i] >= num1.number[i]) {
+            if (this->number[i] >= num1.number[i] && (this->number[i] != 0 || num1.number[i] !=0)) {
                 return false;
             }
         }
@@ -145,7 +147,7 @@ public:
     
     bool operator > (Bigint_160& num1) {
         for (int i = 0; i < 5; i++) {
-            if (this->number[i] <= num1.number[i]) {
+            if (this->number[i] <= num1.number[i] && (this->number[i] != 0 || num1.number[i] != 0)) {
                 return false;
             }
         }
@@ -166,13 +168,54 @@ public:
         }
         return *this;
     }
-     string to_string() {
-        std:: stringstream stream;
-        for (int i = 0; i < 5; i++) {
-           stream <<  std::hex << number[i];
-        }
-        return stream.str();
+    int value(char bit) {
+        return bit == '1' ? 1 : 0;
     }
+    string multiplyingBypowerof2(string bit,int j) {
+        for (int i = 0; i < j; i++)
+            bit += '0';
+        return bit;
+    }
+    string BinaryToDecimal(string binary) {
+        string decimalNumber = "0";
+        int j = 0; 
+        for (int i = binary.length() - 1; i >= 0; i++) {
+            short no = value(binary[i]);
+            multiplyingBypowerof2(binary[i], j);
+            j++;
+        }
+        return decimalNumber;
+    }
+  
+    string to_string() {
+        std:: stringstream stream;
+        std::bitset<32> b0(number[0]), b1(number[1]), b2(number[2]), b3(number[3]), b4(number[4]);
+        string binarynumber = "";
+        binarynumber = b0.to_string() + b1.to_string() + b2.to_string() + b3.to_string() + b4.to_string();
+
+        
+        string str;
+        string decimal;
+        return decimal;
+     
+    }
+    
+    Bigint_160 operator+(const Bigint_160& num1) {
+         Bigint_160 result;
+
+         unsigned long long carry = 0;
+         for (int i = 4; i >= 0; i--) {
+             unsigned long long sum = static_cast<unsigned long long>(this->number[i]) + num1.number[i] + carry;
+             result.number[i] = static_cast<unsigned int>(sum & 0xFFFFFFFF);
+             carry = sum >> 32;
+         }
+                  
+         std::stringstream str;
+         for(int i = 0 ;i <5;i++)
+             str << std::hex << result.number[i];
+         cout << str.str() << endl;;
+         return result;
+     }
 
     friend  std::istream& operator >> ( std::istream& in, Bigint_160& num);
     
@@ -184,7 +227,6 @@ public:
 
     // Convert decimal string to integer
     ss >> decimalValue;
-
     // Convert integer to hexadecimal string
      std::stringstream hexStream;
     hexStream << std:: hex << decimalValue;
