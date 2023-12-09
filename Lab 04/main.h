@@ -1,20 +1,10 @@
+#include"pch.h"
 #include<iostream>
-#include "BigInt.h"
-#include"DHT.h"
-using  std::string;
-using  std::cout;
-using  std::endl;
-
-int main()
-{
-    
-  //  DHT dh;
-    //dh.machinesAndTablePrint();
-    Bigint_160 b1("BBBBBBBBBB");
-    Bigint_160 b2("AAAAAAAAAA");
-    Bigint_160 b3 = b1 + b2;
-    cout << b3.to_string();
+#include "BigIntt.h"
+#include "DHT.h"
+using std::cout;
+int main() {
+	DHT dh;
+	dh.machinesAndTablePrint();
 }
-
-
-//5 9 1 1  4 9 11 14 18 20 21
+//5 9 1 1 4 9 11 14 18 20 21 28

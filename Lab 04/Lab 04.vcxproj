@@ -97,6 +97,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="BigInt.h" />
+    <ClInclude Include="BigIntt.h" />
     <ClInclude Include="DHT.h" />
     <ClInclude Include="Machine.h" />
     <ClInclude Include="pch.h" />

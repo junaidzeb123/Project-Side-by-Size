@@ -1,8 +1,6 @@
 #pragma once
 #include <sstream>
 #include<cmath>
-#include<bitset>
-
 using  std::string;
 using  std::cout;
 using  std::endl;
@@ -13,6 +11,118 @@ using  std::endl;
 
 class Bigint_160 {
     unsigned int number[5];
+    string add(string num1, string num2) {
+        if (num1.length() < num2.length()) {
+            swap(num1, num2);
+        }
+
+        while (num2.length() != num1.length()) {
+            num2 = "0" + num2;
+        }
+
+        string result = "";
+        int carry = 0;
+        int sumIndex = 0;
+
+        for (int i = num1.length() - 1; i >= 0; i--) {
+            sumIndex = (num1[i] - '0') + (num2[i] - '0') + carry;
+            carry = sumIndex / 10;
+            sumIndex = sumIndex % 10;
+            result = std::to_string(sumIndex) + result;
+        }
+
+        if (carry != 0)
+            result = std::to_string(carry) + result;
+
+        return result;
+    }
+
+    string multiplication(string num1, string num2) {
+        if (num1.length() > num2.length()) {
+            swap(num1, num2);
+        }
+
+        int carry = 0;
+        string total = "";
+
+        for (int i = num1.length() - 1; i >= 0; i--) {
+            string result = "";
+
+            for (int j = num2.length() - 1; j >= 0; j--) {
+                int n1 = num1[i] - '0';
+                int n2 = num2[j] - '0';
+                int current = n1 * n2 + carry;
+                carry = (current / 10);
+
+                if (current % 10 == 0) {
+                    result = '0' + result;
+                }
+                else {
+                    result = std::to_string(current % 10) + result;
+                }
+            }
+
+            if (carry != 0)
+                result = std::to_string(carry) + result;
+
+            carry = 0;
+
+            for (int j = num1.length() - 1; j > i; j--)
+                result = result + '0';
+
+            total = add(total, result);
+        }
+
+        return total;
+    }
+
+    string powerOf16(int j) {
+        string no = "1";
+
+        for (int i = 0; i < j; i++) {
+            no = multiplication(no, "16");
+        }
+
+        return no;
+    }
+
+    string hexToDecimal(string hex) {
+        string decimal = "";
+        int j = 0;
+        bool sign = 0;
+
+        if (hex[0] == '-') {
+            sign = 1;
+            hex = hex.substr(1, hex.length() - 1);
+        }
+
+        for (int i = hex.length() - 1; i >= 0; i--) {
+            int digit;
+            char c = hex[i];
+
+            if (c >= '0' && c <= '9') {
+                digit = c - '0';
+            }
+            else if (c >= 'A' && c <= 'F') {
+                digit = c - 'A' + 10;
+            }
+            else if (c >= 'a' && c <= 'f') {
+                digit = c - 'a' + 10;
+            }
+            else {
+                return "Invalid input";
+            }
+
+            decimal = add(decimal, multiplication((std::to_string(digit)), powerOf16(j)));
+            j++;
+        }
+
+        if (sign) {
+            decimal = "-" + decimal;
+        }
+
+        return decimal;
+    }
 
 public:
     Bigint_160() {
@@ -106,7 +216,7 @@ public:
         else if (sizeofBits != 0 && sizeofBits < 160) {
             current = number[0];
             sizeofBits -= 128;
-            current = current << 32 - sizeofBits;
+            current = current << (32 - sizeofBits);
             current = current >> (32 - sizeofBits);
             stream <<  std::hex << current;
             for (int i = 1; i < 5; i++) {
@@ -168,39 +278,19 @@ public:
         }
         return *this;
     }
-    int value(char bit) {
-        return bit == '1' ? 1 : 0;
-    }
-    string multiplyingBypowerof2(string bit,int j) {
-        for (int i = 0; i < j; i++)
-            bit += '0';
-        return bit;
-    }
-    string BinaryToDecimal(string binary) {
-        string decimalNumber = "0";
-        int j = 0; 
-        for (int i = binary.length() - 1; i >= 0; i++) {
-            short no = value(binary[i]);
-            multiplyingBypowerof2(binary[i], j);
-            j++;
-        }
-        return decimalNumber;
-    }
-  
     string to_string() {
         std:: stringstream stream;
-        std::bitset<32> b0(number[0]), b1(number[1]), b2(number[2]), b3(number[3]), b4(number[4]);
-        string binarynumber = "";
-        binarynumber = b0.to_string() + b1.to_string() + b2.to_string() + b3.to_string() + b4.to_string();
-
-        
-        string str;
-        string decimal;
-        return decimal;
-     
+        for (int i = 0; i < 5; i++) {
+            stream <<std::hex <<number[i];
+        }
+        string str = stream.str();
+        while (str[0] == '0') {
+            str = str.substr(1, str.length() - 1);
+        }
+        str = hexToDecimal(str);
+        return str;
     }
-    
-    Bigint_160 operator+(const Bigint_160& num1) {
+     Bigint_160 operator+(const Bigint_160& num1) {
          Bigint_160 result;
 
          unsigned long long carry = 0;
@@ -209,11 +299,11 @@ public:
              result.number[i] = static_cast<unsigned int>(sum & 0xFFFFFFFF);
              carry = sum >> 32;
          }
-                  
-         std::stringstream str;
-         for(int i = 0 ;i <5;i++)
-             str << std::hex << result.number[i];
-         cout << str.str() << endl;;
+
+         // If there's a carry in the highest digit, it means overflow
+         if (carry != 0) {
+             // Handle overflow situation here
+         }
          return result;
      }
 
@@ -239,8 +329,9 @@ public:
 {
      string numstr;
     in >> numstr;
-     string hexString = decimalToHex(numstr);
+    string hexString = decimalToHex(numstr);
     num.AssignNumberInHex(hexString);
     return in;
 }
+ 
 #endif 

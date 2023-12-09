@@ -1,10 +1,14 @@
 #pragma once
+#ifndef MACHINE_H
+#define MACHINE_H
+#include<iostream>
 #include<cmath>
 #include"BigInt.h"
 using  std::string;
 using  std::cout;
 using  std::endl;
 class Machine_Node;
+
 class Files {
 public:
 	int id;
@@ -21,7 +25,7 @@ public:
 class RoutingTable_Node {
 public:
 	int index;
-	Bigint_160 nextMachineID;
+	BigInt nextMachineID;
 	Machine_Node* nextMachineAddress;
 	RoutingTable_Node* next;
 	RoutingTable_Node* previous;
@@ -47,12 +51,14 @@ public:
 	RoutingTable_Node* Head;
 	RoutingTable_Node* tail;
 	int count;
+	
 	RoutingTable()
 	{
 		Head = nullptr;
 		tail = nullptr;
 		count = 1;
 	}
+	
 	void AddNode()
 	{
 		RoutingTable_Node* newNode = new RoutingTable_Node(count);
@@ -77,21 +83,23 @@ public:
 		}
 		count++;
 	}
+	
 	void Diaplay()
 	{
 		RoutingTable_Node* temp = Head;
 		while (temp != nullptr)
 		{
 			cout<<"index " << temp->index << "\t";
-			cout<<"nextmachineid\t" << temp->nextMachineAddress << "\n";
+			cout << "nextmachineid\t" <<temp->nextMachineID << "\n";
 			temp = temp->next;
 		}
 		cout << endl;
 	}
 };
+
 class Machine_Node {
 public:
-	Bigint_160 ID;
+	BigInt ID;
 	Machine_Node* next;
 	RoutingTable FT;
 	Files* root;
@@ -100,7 +108,8 @@ public:
 		next = nullptr;
 		root = nullptr;
 	}
-	Machine_Node(Bigint_160 id,int sizeofTables) {
+	
+	Machine_Node(BigInt id,int sizeofTables) {
 		ID = id;
 		next = nullptr;
 		root = nullptr;
@@ -110,11 +119,10 @@ public:
 	}
 };
 
-
 class Machine_list {
 	Machine_Node* Head;
-	int count;// ("0");
-	int no_of_bits_used;//		
+	BigInt count;
+	int no_of_bits_used;		
 	int sizeofTables;
 public:
 
@@ -123,11 +131,13 @@ public:
 		sizeofTables = 0;
 		no_of_bits_used = 0;
 	}
+	
 	Machine_list(int total, int used)
 	{
 		Head = nullptr;
 		no_of_bits_used = used;
 	}
+	
 	void mangesuccessors() {
 		Machine_Node* temp = Head;
 		while (temp->next != Head && temp != nullptr)
@@ -136,17 +146,17 @@ public:
 			RoutingTable_Node* tableTemp = temp->FT.Head;
 			while (tableTemp != nullptr)
 			{
-				unsigned long long int  decimalValue;
-				std::stringstream ss(temp->ID.to_string());
+				BigInt calculatedId("0");
+				std::stringstream ss(temp->ID.getData());
 
-				// Convert decimal string to integer
 				ss >> decimalValue;
 				unsigned long long int calculatedId = decimalValue + pow(2, i-1);
 				Machine_Node* temp2 = temp->next;
-				while (  temp2->ID.to_string() < std::to_string(calculatedId) && temp2->next != temp)
+				while (  temp2->ID < std::to_string(calculatedId) && temp2->next != temp)
 				{
 					temp2 = temp2->next;
 				}
+
 				tableTemp->nextMachineAddress = temp2;
 				tableTemp->nextMachineID = temp2->ID;
 				tableTemp = tableTemp->next;
@@ -156,7 +166,8 @@ public:
 			temp = temp->next;
 		}
 	}
-	void AddMachine(Bigint_160 ID) {
+	
+	bool AddMachine(BigInt ID) {
 		Machine_Node* newNode = new Machine_Node(ID,sizeofTables);
 
 		if (!Head) {
@@ -167,42 +178,51 @@ public:
 			if (newNode->ID < Head->ID) {
 				Machine_Node* last = Head;
 				while (last->next != Head) {
-					last = last->next;
+						last = last->next;
 				}
+				if (last->ID == newNode->ID)
+					return false;
 				last->next = newNode;
 				newNode->next = Head;
 				Head = newNode;
 			}
-			else {
+			else if (newNode->ID > Head->ID) {
 				Machine_Node* current = Head;
 				while (current->next != Head && current->next->ID < newNode->ID)
 				{
 					current = current->next;
 				}
-
+				if (current->next->ID == newNode->ID)
+					return false;
 				newNode->next = current->next;
 				current->next = newNode;
 			}
+			else {
+				return false;
+			}
 		}
-		count++;
+		++count;
 		mangesuccessors();
+		return true;
 	}
 
 	void Diaplay()
 	{
 		Machine_Node* temp = Head;
-		cout << temp->ID.to_string() << "\n";
+		cout << temp->ID << "\n";
 		temp->FT.Diaplay();
 		temp = temp->next;
 		while (temp != Head)
 		{
-			cout << temp->ID.to_string() <<"\n";
+			cout << temp->ID <<"\n";
 			temp->FT.Diaplay();
 			temp = temp->next;
 		}
 	}
+	
 	void setSizeofTables(int n) {
 		sizeofTables = n;
 	}
 };
 
+#endif 

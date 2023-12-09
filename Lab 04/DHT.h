@@ -1,44 +1,385 @@
 #pragma once
-#include"Machine.h"
+#ifndef DHT_H
+#define DHT_H
+#include "Machine.h"
 #include "BigInt.h"
+#include "BigIntt.h"
 #include "sha1.hpp"
 #include <string>
 #include <iostream>
+
 using  std::string;
 using  std::cout;
 using  std::cin;
 using  std::endl;
-#ifndef DHT_H
-#define DHT_H
 
 class DHT {
 	Machine_list machines;
     int sizeofSpace = 0;
-    int noofMachines = 0;
-public:
-	DHT() {
-         string name = "";
-        int choice = 0;
+    BigInt noofMachines;
+    BigInt maximumId;
+
+    string add(string num1, string num2) {
+        if (num1.length() < num2.length()) {
+            swap(num1, num2);
+        }
+
+        while (num2.length() != num1.length()) {
+            num2 = "0" + num2;
+        }
+
+        string result = "";
+        int carry = 0;
+        int sumIndex = 0;
+
+        for (int i = num1.length() - 1; i >= 0; i--) {
+            sumIndex = (num1[i] - '0') + (num2[i] - '0') + carry;
+            carry = sumIndex / 10;
+            sumIndex = sumIndex % 10;
+            result = std::to_string(sumIndex) + result;
+        }
+
+        if (carry != 0)
+            result = std::to_string(carry) + result;
+
+        return result;
+    }
+
+    string multiplication(string num1, string num2) {
+        if (num1.length() > num2.length()) {
+            swap(num1, num2);
+        }
+
+        int carry = 0;
+        string total = "";
+
+        for (int i = num1.length() - 1; i >= 0; i--) {
+            string result = "";
+
+            for (int j = num2.length() - 1; j >= 0; j--) {
+                int n1 = num1[i] - '0';
+                int n2 = num2[j] - '0';
+                int current = n1 * n2 + carry;
+                carry = (current / 10);
+
+                if (current % 10 == 0) {
+                    result = '0' + result;
+                }
+                else {
+                    result = std::to_string(current % 10) + result;
+                }
+            }
+
+            if (carry != 0)
+                result = std::to_string(carry) + result;
+
+            carry = 0;
+
+            for (int j = num1.length() - 1; j > i; j--)
+                result = result + '0';
+
+            total = add(total, result);
+        }
+
+        return total;
+    }
+
+    string powerOf16(int j) {
+        string no = "1";
+
+        for (int i = 0; i < j; i++) {
+            no = multiplication(no, "16");
+        }
+
+        return no;
+    }
+
+    string hexToDecimal(string hex) {
+        string decimal = "";
+        int j = 0;
+        bool sign = 0;
+
+        if (hex[0] == '-') {
+            sign = 1;
+            hex = hex.substr(1, hex.length() - 1);
+        }
+
+        for (int i = hex.length() - 1; i >= 0; i--) {
+            int digit;
+            char c = hex[i];
+
+            if (c >= '0' && c <= '9') {
+                digit = c - '0';
+            }
+            else if (c >= 'A' && c <= 'F') {
+                digit = c - 'A' + 10;
+            }
+            else if (c >= 'a' && c <= 'f') {
+                digit = c - 'a' + 10;
+            }
+            else {
+                return "Invalid input";
+            }
+
+            decimal = add(decimal, multiplication((std::to_string(digit)), powerOf16(j)));
+            j++;
+        }
+
+        if (sign) {
+            decimal = "-" + decimal;
+        }
+
+        return decimal;
+    }
+   
+    void CalculateMaxId() {
+        if (sizeofSpace < 0) {
+            cout << "size of space must be positive\n";
+            return;
+        }
+        
+        BigInt temp = "1";
+        BigInt temp2 = "2";
+
+        for (int i = 0; i < sizeofSpace; i++) {
+            temp = temp * temp2;
+        }
+
+        maximumId = temp;
+    }
+
+    bool isValidID(string id) {
+        for (int i = 0; i < id.length(); i++) {
+            if (id[i] < '0' || id[i] > '9')
+                return false;
+        }
+
+        if (maximumId > id)
+            return true;
+        return false;
+    }
+
+    bool isValidNoofMachines(BigInt id) {
+      
+        if (id.getData() == "0")
+            return false;
+
+        if (maximumId >= id)
+            return true;
+        
+        return false;
+    }
+
+    void initialMesseage() {
 
         cout << "\t\t\tWELLCOME TO INTERPLANETARY FILE SYSTEM\n";
         cout << "Please enter the size of identifier space you want to add\n";
+
         cin >> sizeofSpace;
-        while (sizeofSpace <= 0) {
-             cout << "please enter a positive size of bit Space\n";
-             cin >> sizeofSpace;
+        while (sizeofSpace <= 0 && sizeofSpace > 160) {
+            cout << "Sorry! size of Space mut be in range of 0 to 160(inclusize) \n";
+            cin >> sizeofSpace;
         }
+
         machines.setSizeofTables(sizeofSpace);
+        CalculateMaxId();
 
         cout << "enter the no of machines you want to add\n";
         cin >> noofMachines;
-        while (noofMachines <= 0) {
-             cout << "please enter a positive szieofSpace\n";
-             cin >> noofMachines;
+
+        while (!isValidNoofMachines(noofMachines)) {
+
+            cout << "please enter a valid No of machines\n";
+            cout << " The no of machines must in range of 1 to " << maximumId << " (inclusive)\n";
+            cin >> noofMachines;
+
         }
+    }
+
+    void takeInputByIds() {
+
+        for (BigInt i = "0"; i < noofMachines; ++i) {
+            cout << "Please enter the id of machine " << i + "1" << " \n";
+            string id;
+            cin >> id;
+
+            while (!isValidID(id)) {
+              
+                cout << "Invalid Id\n";
+                cout << "id must be in range of 0 to  " << maximumId<<"\n";
+                cout << "Please enter again\n";
+                cin >> id;
+            }
+
+            BigInt ids(id);
+            bool status = machines.AddMachine(ids);
+            if (!status) {
+                cout << "Machine with same key already Exits\n";
+                cout << "Enter id againt\n";
+                --i;
+                continue;
+            }
+        }
+    }
+
+    void takeInputByNames() {
+        for (BigInt i = "0"; i < noofMachines; ++i) {
+            
+            cout << "Please enter the name of machine " << i + "1" << " \n";
+            string name;
+            cin >> name;
+
+            SHA1 checksum;
+            checksum.update(name);
+
+            string hashedId = checksum.final();
+            hashedId = Mod(hashedId);
+
+            BigInt ids(hashedId);
+            bool status = machines.AddMachine(ids);
+
+            if (!status) {
+                cout << "Machine with same key already Exits\n";
+                cout << "Enter id againt\n";
+                --i;
+                continue;
+            }
+        }
+    }
+
+    void ModHelper(string numberHex,unsigned int number[5]) {
+        int digitValue = 0;
+        int digitCount = 0;
+        for (int i = 0; i < 5; i++) {
+            number[i] = 0;
+        }
+        while (numberHex.length() < 40) {
+            numberHex = '0' + numberHex;
+        }
+        for (char hexChar : numberHex) {
+            if (isdigit(hexChar)) {
+                digitValue = hexChar - '0';
+            }
+            else {
+                digitValue = tolower(hexChar) - 'a' + 10;
+            }
+            if (digitCount < 8) {
+                number[0] <<= 4;
+                number[0] += digitValue;
+            }
+            else if (digitCount < 16) {
+                number[1] <<= 4;
+                number[1] += digitValue;
+            }
+            else if (digitCount < 24) {
+                number[2] <<= 4;
+                number[2] += digitValue;
+            }
+            else if (digitCount < 32) {
+                number[3] <<= 4;
+                number[3] += digitValue;
+            }
+            else {
+                number[4] <<= 4;
+                number[4] += digitValue;
+            }
+
+            digitCount++;
+        }
+    }
+
+    string Mod(string hex) {
+
+        unsigned int number[5];
+
+        for (int i = 0; i < 5; i++) {
+            number[i] = 0;
+        }
+
+        ModHelper(hex, number);
+
+        std::stringstream stream;
+        stream << "";
+
+        unsigned   int current = 0;
+
+        if (sizeofSpace <= 32 && sizeofSpace != 0) {
+            current = number[4];
+            current = current << 32 - sizeofSpace;
+            current = current >> (32 - sizeofSpace);
+            stream << std::hex << current;
+        }
+        
+        else if (sizeofSpace <= 64 && sizeofSpace != 0) {
+            current = number[3];
+            sizeofSpace -= 32;
+            current = current << 32 - sizeofSpace;
+            current = current >> (32 - sizeofSpace);
+            stream << std::hex << current;
+            stream << std::hex << number[4];
+        }
+        
+        else if (sizeofSpace <= 96 && sizeofSpace != 0) {
+            current = number[2];
+            sizeofSpace -= 64;
+            current = current << 32 - sizeofSpace;
+            current = current >> (32 - sizeofSpace);
+            stream << std::hex << current;
+            stream << std::hex << number[3];
+            stream << std::hex << number[4];
+        }
+        
+        else if (sizeofSpace <= 128 && sizeofSpace != 0) {
+            current = number[1];
+            sizeofSpace -= 96;
+            current = current << 32 - sizeofSpace;
+            current = current >> (32 - sizeofSpace);
+            stream << std::hex << current;
+            stream << std::hex << number[2];
+            stream << std::hex << number[3];
+            stream << std::hex << number[4];
+        }
+        
+        else if (sizeofSpace != 0 && sizeofSpace < 160) {
+            current = number[0];
+            sizeofSpace -= 128;
+            current = current << (32 - sizeofSpace);
+            current = current >> (32 - sizeofSpace);
+            stream << std::hex << current;
+            for (int i = 1; i < 5; i++) {
+                stream << std::hex << number[i];
+            }
+        }
+       
+        else if (sizeofSpace != 0) {
+            for (int i = 0; i < 5; i++) {
+                stream << std::hex << number[i];
+
+            }
+        }
+       
+        int length = stream.str().length();
+        std::stringstream stream2;
+
+        while (stream2.str().length() < 40 - length)
+            stream2 << 0;
+
+        stream2 << stream.str();
+        string str =  hexToDecimal(stream2.str());
+
+        return str;
+    }
+
+public:
+	DHT() {
+        string name = "";
+        int choice = 0;
+        initialMesseage();    
 
         cout << "Do you want to give ids  or names  to each machine\n";
         cout << "1.Ids\n";
         cout << "2.Names\n";
+
         cin >> choice;
         while (choice != 1 && choice != 2) {
              cout << "Enter a valid choice\n";
@@ -46,70 +387,17 @@ public:
         }
 
         if (choice == 1) {
-            Bigint_160*idsArry = new Bigint_160[noofMachines];
-            for (int i = 0; i < noofMachines; i++) {
-                bool repeated = false;
-                 cout << "Please enter the id of machine " << i +1<< " \n";
-                Bigint_160 ids;
-                 cin >> ids;
-
-                for (int j = 0; j < i; j++) {
-                    if (idsArry[j] == ids) {
-                         cout << "This machine name is already assigned to an another machines\n";
-                         cout << "Pleae assign unique name to each machine\n";
-                         cout << "Pleae enter the name againt";
-                        repeated = true;
-                        break;
-                    }
-                }
-
-                if (repeated) {
-                    i--;
-                    continue;
-                }
-                idsArry[i] = ids;
-
-                machines.AddMachine(ids);
-            }
-            delete[] idsArry;
+            takeInputByIds();
         }
         else {
-             string* names = new  string[noofMachines];
-            for (int i = 0; i < noofMachines; i++) {
-                bool repeated = false;
-                 cout << "Please enter the name of machine " << i+1 << " \n";
-                 string name;
-                 cin >> name;
-
-                for (int j = 0; j < i; j++) {
-                    if (names[j] == name) {
-                         cout << "This machine name is already assigned to an another machines\n";
-                         cout << "Pleae assign unique name to each machine\n";
-                         cout << "Pleae enter the name againt";
-                        repeated = true;
-                        break;
-                    }
-                }
-
-                if (repeated) {
-                    i--;
-                    continue;
-                }
-
-                names[i] = name;
-                SHA1 checksum;
-                checksum.update(name);
-                string hashedId = checksum.final();
-                Bigint_160 ids(hashedId);
-                ids = ids % sizeofSpace;
-                machines.AddMachine(ids);
-            }
-            delete[]names;
+            takeInputByNames();
         }
 	}
+   
     void machinesAndTablePrint() {
         machines.Diaplay();
     }
+
     void displayRoutingTables() {
 
     }
