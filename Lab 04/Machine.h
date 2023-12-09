@@ -140,6 +140,7 @@ public:
 	
 	void mangesuccessors() {
 		Machine_Node* temp = Head;
+	
 		while (temp->next != Head && temp != nullptr)
 		{
 			int i = 1;
