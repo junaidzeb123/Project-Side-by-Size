@@ -2,7 +2,6 @@
 #ifndef DHT_H
 #define DHT_H
 #include "Machine.h"
-#include "BigInt.h"
 #include "BigIntt.h"
 #include "sha1.hpp"
 #include <string>
@@ -14,6 +13,7 @@ using  std::cin;
 using  std::endl;
 
 class DHT {
+
 	Machine_list machines;
     int sizeofSpace = 0;
     BigInt noofMachines;
@@ -146,6 +146,7 @@ class DHT {
         }
 
         maximumId = temp;
+        machines.SetMaxId(maximumId);
     }
 
     bool isValidID(string id) {
@@ -394,7 +395,22 @@ public:
         }
 	}
    
+    void deleteMachine(string ID) {
+        BigInt Id(ID);
+        bool status = machines.deleteMachine(Id);
+        if (status == true) {
+            cout << "\nThe machine With Id " << ID << " is Succefully removed.\n";
+        }
+        else {
+            cout << "\nThe machine with  Id " << ID << " does not exits\n";
+        }
+    }
+
     void machinesAndTablePrint() {
+        machines.printMachineList();
+        cout << "\n do you want to print FT tables\n";
+        int c;
+        cin >> c;
         machines.Diaplay();
     }
 

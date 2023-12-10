@@ -7,9 +7,8 @@ using  std::endl;
 #ifndef BIGINT_160_H
 #define BIGINT_160_H
 
-
-
 class Bigint_160 {
+  
     unsigned int number[5];
     string add(string num1, string num2) {
         if (num1.length() < num2.length()) {
@@ -278,6 +277,7 @@ public:
         }
         return *this;
     }
+ 
     string to_string() {
         std:: stringstream stream;
         for (int i = 0; i < 5; i++) {
@@ -290,7 +290,8 @@ public:
         str = hexToDecimal(str);
         return str;
     }
-     Bigint_160 operator+(const Bigint_160& num1) {
+    
+    Bigint_160 operator+(const Bigint_160& num1) {
          Bigint_160 result;
 
          unsigned long long carry = 0;

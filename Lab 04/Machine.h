@@ -3,7 +3,6 @@
 #define MACHINE_H
 #include<iostream>
 #include<cmath>
-#include"BigInt.h"
 using  std::string;
 using  std::cout;
 using  std::endl;
@@ -24,6 +23,7 @@ public:
 
 class RoutingTable_Node {
 public:
+	
 	int index;
 	BigInt nextMachineID;
 	Machine_Node* nextMachineAddress;
@@ -37,6 +37,7 @@ public:
 		next = nullptr;
 		previous = nullptr;
 	}
+
 	RoutingTable_Node(int i )
 	{
 		index = i;
@@ -122,8 +123,55 @@ public:
 class Machine_list {
 	Machine_Node* Head;
 	BigInt count;
+	BigInt maxid;
 	int no_of_bits_used;		
 	int sizeofTables;
+
+	void manageSuccessorsHelper(Machine_Node* temp) {
+		int i = 1;
+		RoutingTable_Node* tableTemp = temp->FT.Head;
+		Machine_Node* last = Head;
+		while (last->next != Head)
+		{
+			last = last->next;
+		}
+		while (tableTemp != nullptr) {
+
+			BigInt p = temp->ID;
+			BigInt calculatedId("1");
+			Machine_Node* temp2 = temp->next;
+
+			calculatedId = p + calculatedId.pow(i - 1);
+			
+			while (calculatedId > last->ID) {
+				calculatedId = calculatedId - maxid;
+				temp2 = Head;
+			}
+
+			while ((temp2->ID < calculatedId) && (temp2->next != temp)) {
+			
+				temp2 = temp2->next;
+			}
+
+			tableTemp->nextMachineAddress = temp2;
+			tableTemp->nextMachineID = temp2->ID;
+			tableTemp = tableTemp->next;
+			i++;
+
+		}
+		temp = temp->next;
+	}
+	void mangesuccessors() {
+		Machine_Node* temp = Head;
+
+		while (temp->next != Head) {
+			manageSuccessorsHelper(temp);
+			temp = temp->next;
+		}
+		if (temp->next == Head) {
+			manageSuccessorsHelper(temp);
+		}
+	}
 public:
 
 	Machine_list() {
@@ -132,40 +180,14 @@ public:
 		no_of_bits_used = 0;
 	}
 	
+	void SetMaxId(BigInt max) {
+		maxid = max;
+	}
+	
 	Machine_list(int total, int used)
 	{
 		Head = nullptr;
 		no_of_bits_used = used;
-	}
-	
-	void mangesuccessors() {
-		Machine_Node* temp = Head;
-	
-		while (temp->next != Head && temp != nullptr)
-		{
-			int i = 1;
-			RoutingTable_Node* tableTemp = temp->FT.Head;
-			while (tableTemp != nullptr)
-			{
-				BigInt calculatedId("0");
-				std::stringstream ss(temp->ID.getData());
-
-				ss >> decimalValue;
-				unsigned long long int calculatedId = decimalValue + pow(2, i-1);
-				Machine_Node* temp2 = temp->next;
-				while (  temp2->ID < std::to_string(calculatedId) && temp2->next != temp)
-				{
-					temp2 = temp2->next;
-				}
-
-				tableTemp->nextMachineAddress = temp2;
-				tableTemp->nextMachineID = temp2->ID;
-				tableTemp = tableTemp->next;
-				i++;
-				
-			}
-			temp = temp->next;
-		}
 	}
 	
 	bool AddMachine(BigInt ID) {
@@ -207,6 +229,50 @@ public:
 		return true;
 	}
 
+	bool deleteMachine(BigInt ID) {
+
+		if (Head == nullptr) {
+			return false;
+		}
+
+		Machine_Node* temp = Head;
+		Machine_Node* prev = nullptr;
+		bool status = false;
+		if (Head->ID == ID) {
+			// if head to be deleted and only one node
+			if (Head->next == Head) {
+				delete Head;
+				Head = nullptr;
+				status = true;
+			}
+			else {
+				prev = Head;
+				while (prev->next != Head) {
+					prev = prev->next;
+				}
+				prev->next = Head->next;
+				Head = Head->next;
+				delete temp;
+				status = true;
+			}
+		}
+		else {
+			while (temp->next != Head && temp->ID != ID) {
+				prev = temp;
+				temp = temp->next;
+			}
+			if (temp->ID == ID) {
+				prev->next = temp->next;
+				delete temp;
+				status = true;
+			}
+		}
+		if (status) {
+			mangesuccessors();
+		}
+		return status;		
+	}
+
 	void Diaplay()
 	{
 		Machine_Node* temp = Head;
@@ -223,6 +289,20 @@ public:
 	
 	void setSizeofTables(int n) {
 		sizeofTables = n;
+	}
+
+	void printMachineList() {
+		if (Head == nullptr) {
+			cout << "sorry but there is no machine in system\n";
+		}
+		else {
+			Machine_Node* temp = Head;
+			while (temp->next != Head) {
+				cout << temp->ID << " ";
+				temp = temp->next;
+			}
+			cout << temp->ID << " ";
+		}
 	}
 };
 
