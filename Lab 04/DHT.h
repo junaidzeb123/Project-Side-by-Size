@@ -2,7 +2,7 @@
 #ifndef DHT_H
 #define DHT_H
 #include "Machine.h"
-#include "BigIntt.h"
+#include "BigInt.h"
 #include "sha1.hpp"
 #include <string>
 #include <iostream>
@@ -18,6 +18,7 @@ class DHT {
     int sizeofSpace = 0;
     BigInt noofMachines;
     BigInt maximumId;
+    int sizeofBtree;
 
     string add(string num1, string num2) {
         if (num1.length() < num2.length()) {
@@ -162,6 +163,10 @@ class DHT {
 
     bool isValidNoofMachines(BigInt id) {
       
+        if (!id.isValid())
+            return false;
+        if (!id.isValid())
+            return false;
         if (id.getData() == "0")
             return false;
 
@@ -174,22 +179,22 @@ class DHT {
     void initialMesseage() {
 
         cout << "\t\t\tWELLCOME TO INTERPLANETARY FILE SYSTEM\n";
-        cout << "Please enter the size of identifier space you want to add\n";
-
+        cout << "Please enter the size of identifier space between 0 and 160: ";
         cin >> sizeofSpace;
-        while (sizeofSpace <= 0 && sizeofSpace > 160) {
-            cout << "Sorry! size of Space mut be in range of 0 to 160(inclusize) \n";
-            cin >> sizeofSpace;
+        while (std::cin.fail() || sizeofSpace <= 0 || sizeofSpace > 160) {
+            std::cin.clear(); // Clear error flags
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard input buffer
+            std::cout << "Invalid input! Please enter a number between 0 and 160: ";
+            std::cin >> sizeofSpace;
         }
 
         machines.setSizeofTables(sizeofSpace);
         CalculateMaxId();
 
-        cout << "enter the no of machines you want to add\n";
+        cout << "enter the no of machines you want to add: ";
         cin >> noofMachines;
 
-        while (!isValidNoofMachines(noofMachines)) {
-
+        while ( !isValidNoofMachines(noofMachines)) {
             cout << "please enter a valid No of machines\n";
             cout << " The no of machines must in range of 1 to " << maximumId << " (inclusive)\n";
             cin >> noofMachines;
@@ -367,7 +372,9 @@ class DHT {
 
         stream2 << stream.str();
         string str =  hexToDecimal(stream2.str());
-
+        while (str[0] == '0'){
+            str = str.substr(1, str.length() - 1);
+        }
         return str;
     }
 
@@ -377,14 +384,30 @@ public:
         int choice = 0;
         initialMesseage();    
 
+        cout << "please enter the size of B-Tree:\n";
+        cin >> sizeofBtree;
+        while (std::cin.fail()) {
+            if (std::cin.fail()) {
+                std::cin.clear(); // Clear error flags
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard input buffer
+            }
+            cout << "Enter a valid size \n";
+            cin >> sizeofBtree;
+        }
+        machines.SetsizeofBtree(sizeofBtree);
+
         cout << "Do you want to give ids  or names  to each machine\n";
         cout << "1.Ids\n";
         cout << "2.Names\n";
 
         cin >> choice;
-        while (choice != 1 && choice != 2) {
-             cout << "Enter a valid choice\n";
-             cin >> choice;
+        while (std::cin.fail() ||(choice != 1 && choice != 2)) {
+            if (std::cin.fail()) {
+                std::cin.clear(); // Clear error flags
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard input buffer
+            }
+            cout << "Enter a valid choice\n";
+            cin >> choice;
         }
 
         if (choice == 1) {
@@ -393,6 +416,8 @@ public:
         else {
             takeInputByNames();
         }
+
+   
 	}
    
     void deleteMachine(string ID) {
@@ -406,15 +431,78 @@ public:
         }
     }
 
-    void machinesAndTablePrint() {
-        machines.printMachineList();
-        cout << "\n do you want to print FT tables\n";
-        int c;
-        cin >> c;
-        machines.Diaplay();
+    void addMachine() {
+        int choice = 0;
+        string id;
+        cout << "Do you want to give ids  or names  to each machine\n";
+        cout << "1.Ids\n";
+        cout << "2.Names\n";
+        cin >> choice;
+        while (std::cin.fail() || (choice != 1 && choice != 2)) {
+            if (std::cin.fail()) {
+                std::cin.clear(); // Clear error flags
+                std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Discard input buffer
+            }
+            cout << "Enter a valid choice\n";
+            cin >> choice;
+        }
+        if (choice == 1) {
+            cout << "Please enter the id\n";
+            cin >> id;
+            while (!isValidID(id)) {
+                cout << "Invalid Id\n";
+                cout << "id must be in range of 0 to  " << maximumId << "\n";
+                cout << "Please enter again\n";
+                cin >> id;
+            }
+        }
+        else {
+            cout << "Please enter the name of machine " << " \n";
+            string name;
+            cin >> name;
+
+            SHA1 checksum;
+            checksum.update(name);
+
+            id = checksum.final();
+            id = Mod(id);
+        }        
+
+        bool status = machines.AddMachine(BigInt(id));
+        if (status == true) {
+            cout << "The machine is addes successfully\n";
+        }
+        else {
+            cout << "Machine with with id already exists\n";
+        }
     }
 
-    void displayRoutingTables() {
+    void PrintAllMachinesWithRoutingTalbes() {
+        machines.printMachineList();
+        machines.PrintAllRoutingTables();
+    }
+
+    void printMachineList() {
+        machines.printMachineList();
+    }
+
+    void printRoutingTable(string id) {
+        BigInt temp(id);
+        machines.PrintRoutingTable(temp);
+    }
+
+    void storeFile(string id, string content,string extension) {
+        string modedId = Mod(id);
+        BigInt fileId(modedId);
+        cout << "Key of file is: " << modedId <<"\n";
+        machines.StoringFile(content, fileId, extension);
+    }
+
+    void deleteAfile(string id) {
+        BigInt id1(id);
+        machines.deletingAFile(id1);
+    }
+    ~DHT() {
 
     }
 };
